@@ -268,8 +268,8 @@ function PlayGame({ params }) {
           {/* controls (mobile + shared) */}
           <div className="mt-4 space-y-3">
             {lastHint && (
-              <Callout tone="info" icon={Lightbulb} title={lastHint.meta.label} className="lg:hidden">
-                {lastHint.meta.blurb}
+              <Callout tone="info" icon={Lightbulb} title={lastHint.meta?.label} className="lg:hidden">
+                {lastHint.meta?.blurb}
               </Callout>
             )}
             <ActionBar
@@ -309,8 +309,8 @@ function PlayGame({ params }) {
           </Panel>
 
           {lastHint && (
-            <Callout tone="info" icon={Lightbulb} title={lastHint.meta.label}>
-              {lastHint.meta.blurb}
+            <Callout tone="info" icon={Lightbulb} title={lastHint.meta?.label}>
+              {lastHint.meta?.blurb}
             </Callout>
           )}
 

@@ -3,7 +3,7 @@
 // a read-through of a pattern. The copy is deliberately concise — enough to solve
 // with, not a textbook. `practice` tells the Learn pages which drill to render.
 
-export const LESSONS = [
+const DEFAULT_LESSONS = [
   {
     id: 'scanning',
     title: 'Scanning',
@@ -168,4 +168,65 @@ export const LESSONS = [
   },
 ]
 
+// Live binding. applyLessons() may replace this with the owner's edited Learning
+// Centre from the portfolio admin; consumers import it directly (an ESM live
+// binding) and re-read it on the next mount. A data update remounts the tree
+// (see main.jsx), so the Learn pages always render the current list.
+export let LESSONS = DEFAULT_LESSONS
+
 export const lessonById = (id) => LESSONS.find((l) => l.id === id)
+
+// -------------------------------------------------------- remote (editable) --
+// The Learning Centre is owner-editable. Everything is normalized and guarded so
+// a partial or malformed payload can never blank the centre: a lesson with no
+// readable body is dropped, an unknown level/practice falls back to a safe value
+// that still renders, and if nothing valid survives we keep the bundled lessons.
+// `practice` and `level` are contracts with the Learn pages (which drill to show,
+// which group to file under), so unknown values are coerced, not trusted.
+
+const PRACTICES = new Set(['single', 'notes', 'read'])
+const LEVELS = new Set(['Beginner', 'Intermediate', 'Advanced'])
+
+const str = (v, fallback) => (typeof v === 'string' && v.trim() ? v.trim() : fallback)
+const num = (v, fallback) => {
+  const n = Number(v)
+  return Number.isFinite(n) ? n : fallback
+}
+
+function normalizeBody(v) {
+  const out = []
+  for (const b of Array.isArray(v) ? v : []) {
+    if (!b || typeof b !== 'object') continue
+    const h = str(b.h, '')
+    const p = str(b.p, '')
+    if (!h && !p) continue
+    out.push({ h, p })
+  }
+  return out
+}
+
+export function applyLessons(rows) {
+  if (!Array.isArray(rows) || !rows.length) return
+  const next = []
+  const seen = new Set()
+  for (const r of rows) {
+    if (!r || typeof r !== 'object') continue
+    const id = str(r.id, '')
+    if (!id || seen.has(id)) continue
+    const body = normalizeBody(r.body)
+    if (!body.length) continue // no readable content — skip, don't render blank
+    const level = str(r.level, '')
+    const practice = str(r.practice, '')
+    seen.add(id)
+    next.push({
+      id,
+      title: str(r.title, id),
+      level: LEVELS.has(level) ? level : 'Beginner',
+      minutes: Math.max(1, Math.round(num(r.minutes, 3))),
+      summary: str(r.summary, ''),
+      practice: PRACTICES.has(practice) ? practice : 'read',
+      body,
+    })
+  }
+  if (next.length) LESSONS = next
+}

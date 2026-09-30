@@ -15,6 +15,9 @@ export default function Learn() {
   const lessonsCompleted = useStore((s) => s.lessonsCompleted)
   const completed = LESSONS.filter((l) => lessonsCompleted[l.id]).length
 
+  // Grouped from the current LESSONS. Empty deps means this recomputes once per
+  // mount — and a data update remounts the tree (see main.jsx), so the grouped
+  // lessons stay in step with an edited Learning Centre.
   const groups = useMemo(
     () =>
       LEVELS.map((level) => ({ level, lessons: LESSONS.filter((l) => l.level === level) })).filter(
